@@ -1,33 +1,40 @@
 import socket
+import threading
 
-# Configuration for connecting to the server
 HOST = "127.0.0.1"  # Server's address
-PORT = 12345        # Server's port
 
-client_username = "Brad"
-print('Type "End" to leave the chat')
+desired_chat = input("General of direct message (G/D): ")
+if desired_chat == "G":
+    dm = False
+    PORT = 12345
+else:
+    dm = True
+    PORT = 12346
 
-def client_message():
-    clientMessage = input("Message to send to server: ")
-    return clientMessage
-
-def client_send_receive():
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client_socket:
-        client_socket.connect((HOST, PORT))  # Connect to the server
-        print(f"Connected to server at {HOST}:{PORT}")
-            
-        client_socket.sendall(client_username.encode()) # Sending the username
-        
-        while True:
-            message = client_message()
-
-            if message == "End":
+def receive_messages(client_socket):
+    while True:
+        try:
+            message = client_socket.recv(1024).decode()
+            if message:
+                print(message)
+            else:
                 break
+        except ConnectionResetError:
+            print("Connection to server lost.")
+            break
 
-            client_socket.sendall(message.encode())  # Send a message                
-            data = client_socket.recv(1024)  # Receive a response
-            print(f"Received: {data.decode()}")
-        
+with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client_socket:
+    client_socket.connect((HOST, PORT))
+    username = "Brad"
+    client_socket.sendall(username.encode())  # Send username
 
-if __name__ == "__main__":
-    client_send_receive()
+    if dm == True:
+        connected_client = input("Who do you want to message: ")
+        client_socket.sendall(connected_client.encode())
+
+    # Start a thread to listen for incoming messages
+    threading.Thread(target=receive_messages, args=(client_socket,), daemon=True).start()
+
+    while True:
+        message = input("Message: ")
+        client_socket.sendall(message.encode())  # Send message to server
