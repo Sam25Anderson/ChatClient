@@ -1,0 +1,11 @@
+High Level:
+- Server that accepts all incoming requests, manages authentication, and forwards messages to correct clients
+- Clients that can send messages to other clients and vice versa
+
+Actional Items:
+- Server socket (done)
+- Client socket (done)
+- Client to client communication 
+- User accounts
+- Authentication database
+- Client deployable through a .exe file
