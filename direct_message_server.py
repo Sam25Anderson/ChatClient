@@ -2,6 +2,7 @@ import socket
 import threading
 import time
 from fastapi import FastAPI
+import pickle
 
 app = FastAPI()
 
@@ -10,6 +11,7 @@ PORT = 12346
 
 client_connections = {}
 conn_dict = {}
+current_connections = []
 lock = threading.Lock()
 
 def direct_message(sender, message):
@@ -21,7 +23,7 @@ def handle_client(conn, addr):
     print(f"Connected by {addr}")
     with conn:
         try:
-            data = conn.recv(1024)  # Receive the username
+            data = conn.recv(1024)
             if not data:
                 print(f"Connection closed by {addr}")
                 return
@@ -29,7 +31,14 @@ def handle_client(conn, addr):
             client_username = data.decode()
             print(f"Username: {client_username}")
 
-            data = conn.recv(1024) # Receive the desired connection
+            if len(current_connections) == 0:
+                conn.sendall(pickle.dumps(["No other active users"]))
+            else:
+                conn.sendall(pickle.dumps(current_connections))
+            
+            current_connections.append(client_username)
+
+            data = conn.recv(1024)
             client_connection_request = data.decode()
             print(f"Connect request: {client_connection_request}")
 
@@ -50,11 +59,11 @@ def handle_client(conn, addr):
                     break
 
             while True:
-                data = conn.recv(1024)  # Receive data from the client
+                data = conn.recv(1024)
                 if not data:
                     print(f"Connection closed by {addr}")
                     break
-                direct_message(client_username, f"{client_username}: {data.decode()}\n".encode())
+                direct_message(client_username, f"{client_username}: {data.decode()}".encode())
 
         except ConnectionResetError:
             print(f"Connection reset by {addr}")
@@ -70,14 +79,12 @@ def start_socket_server():
         print(f"Socket server is running on {HOST}:{PORT}")
 
         while True:
-            conn, addr = server_socket.accept()  # Accept a client connection
-            # Start a new thread to handle the client
+            conn, addr = server_socket.accept()
             client_thread = threading.Thread(target=handle_client, args=(conn, addr), daemon=True)
             client_thread.start()
 
 @app.on_event("startup")
 def startup_event():
-    # Start the socket server in a background thread
     threading.Thread(target=start_socket_server, daemon=True).start()
 
 @app.get("/")
