@@ -9,3 +9,4 @@ Actionable Items:
 - User accounts
 - Authentication database
 - Client deployable through a .exe file
+- Maybe add a GUI if feeling bored
