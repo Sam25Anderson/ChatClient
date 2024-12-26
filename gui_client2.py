@@ -42,14 +42,14 @@ def network_task():
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client_socket:
         client_socket.connect((HOST, PORT))
         print("Connected to server.")
-        username = "Sam"
+        username = "Brad"
         client_socket.sendall(username.encode())
 
         other_user = pickle.loads(client_socket.recv(4096))
         for i in range(len(other_user)):
             print(other_user[i])
         
-        connect_client = "Brad"
+        connect_client = "Sam"
         client_socket.sendall(connect_client.encode())
 
         threading.Thread(target=receive_messages, args = (client_socket,), daemon=True).start()

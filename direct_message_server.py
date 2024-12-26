@@ -17,7 +17,14 @@ lock = threading.Lock()
 def direct_message(sender, message):
     with lock:
         if sender in client_connections:
-            conn_dict[client_connections[sender]].sendall(message)
+            conn = conn_dict.get(client_connections[sender])
+            if conn and conn.fileno() != -1:
+                try:
+                    conn.sendall(message)
+                except OSError as e:
+                    print(f"Error sending message to {sender}: {e}")
+            else:
+                print(f"Invalid socket for {sender}. Cannot send message.")
 
 def handle_client(conn, addr):
     print(f"Connected by {addr}")
@@ -60,16 +67,28 @@ def handle_client(conn, addr):
                     break
 
             while True:
-                data = conn.recv(1024)
-                if not data:
-                    print(f"Connection closed by {addr}")
+                try:
+                    data = conn.recv(1024)
+                    if not data:
+                        print(f"Connection closed by {addr}")
+                        break
+                    direct_message(client_username, f"{client_username}: {data.decode()}".encode())
+                except (ConnectionResetError, OSError) as e:
+                    print(f"Error receiving data from {addr}: {e}")
                     break
-                direct_message(client_username, f"{client_username}: {data.decode()}".encode())
 
         except ConnectionResetError:
-            print(f"Connection reset by {addr}")
+            print(f"Error receiving data from {addr}: {e}")
 
         finally:
+            with lock:
+                if client_username in current_connections:
+                    current_connections.remove(client_username)
+                if client_username in client_connections:
+                    del client_connections[client_username]
+                if client_username in conn_dict:
+                    del conn_dict[client_username]
+                    
             direct_message(client_username, f"{client_username} left the chat.\n".encode())
             print(f"Closing connection to {addr}")
 
