@@ -30,7 +30,6 @@ def handle_client(conn, addr):
     print(f"Connected by {addr}")
     with conn:
         try:
-            conn.settimeout(10)
             data = conn.recv(1024)
             if not data:
                 print(f"Connection closed by {addr}")

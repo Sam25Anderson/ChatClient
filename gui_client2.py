@@ -10,7 +10,9 @@ PORT = 12346
 message_history = []
 last_list_length = 0
 sent_messages_history = 0
-sent_messages = 0
+sent_messages = []
+received_messages_history = 0
+received_messages = []
 
 def receive_messages(client_socket):
     while True:
@@ -21,7 +23,8 @@ def receive_messages(client_socket):
             message = client_socket.recv(1024).decode()
             if message:
                 message_history.append(message)
-                update_chat_display()
+                received_messages.append(message)
+                check_for_changes()
             else:
                 print("Server closed the connection")
                 break
@@ -38,6 +41,8 @@ def receive_messages(client_socket):
 def network_task():
     global last_list_length
     global message
+    global sent_messages_history
+    global sent_messages
     print("Network function started...")
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client_socket:
         client_socket.connect((HOST, PORT))
@@ -56,8 +61,7 @@ def network_task():
         while True:
             if sent_messages_history < len(sent_messages):
                 client_socket.sendall(message.encode())
-                update_chat_display()
-                sent_messages_history = len(message_history)
+                check_for_changes()
 
 def update_chat_display():
     chat_display.configure(state=tk.NORMAL)
@@ -69,9 +73,13 @@ def update_chat_display():
 
 def check_for_changes():
     global last_list_length
-    if last_list_length < len(message_history):
-        window.after(100, update_chat_display)
+    global received_messages_history
+    global sent_messages_history
+    if last_list_length < len(message_history) or received_messages_history < len(received_messages) or sent_messages_history < len(sent_messages):
+        update_chat_display()
     last_list_length = len(message_history)
+    received_messages_history = len(received_messages)
+    sent_messages_history = len(sent_messages)
 
 def start_network_thread():
     print("Starting network thread...")
@@ -142,6 +150,5 @@ send_button.grid(row=1, column=2, sticky="ew", padx=10, pady=(0, 10))
 
 start_network_thread()
 
-window.after(100, check_for_changes)
 window.mainloop()
     
