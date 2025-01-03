@@ -3,6 +3,7 @@ import threading
 import pickle
 import tkinter as tk
 from tkinter import scrolledtext
+import time
 
 HOST = "127.0.0.1"
 PORT = 12346
@@ -14,6 +15,9 @@ sent_messages = []
 received_messages_history = 0
 received_messages = []
 current_chat = ""
+button_count = 0
+button_list = []
+desired_user = ""
 
 def receive_messages(client_socket):
     while True:
@@ -36,7 +40,7 @@ def receive_messages(client_socket):
             print(f"Error in receive_messages: {e}")
             break
 
-def network_task():
+def network_task(desired_user):
     global last_list_length
     global message
     global sent_messages_history
@@ -98,6 +102,28 @@ def switch_chat():
     global current_chat
     current_chat = ""
 
+def check_for_new_users():
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as user_check_socket:
+        user_check_socket.connect((HOST,PORT))
+        socket_type = "user_check"
+        user_check_socket.sendall(socket_type.encode())
+
+        while True:
+            user_list = pickle.loads(user_check_socket.recv(4096))
+            for i in user_list:
+                if i not in button_list:
+                    add_button(i)
+                    button_list.append(i)
+
+def check_for_new_user_thread():
+    print("Starting new user thread...")
+    thread = threading.Thread(target = check_for_new_users, daemon=True)
+    thread.start()
+''' Why this not worK?
+def change_chat():
+    while True:
+        if current_chat rel;kjnhgr;eisokrf hjg;opisrdfjhi g
+'''
 #### GUI CODE ####
 
 def add_button(button_name):
@@ -130,10 +156,6 @@ inner_frame = tk.Frame(canvas)
 inner_frame.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
 canvas.create_window((0, 0), window=inner_frame, anchor="nw")
 
-button_count = 0
-add_button("Test")  # Example buttons
-add_button("Big testerson")
-
 # Create the chat display
 chat_display = scrolledtext.ScrolledText(window, state=tk.DISABLED)
 chat_display.grid(row=0, column=1, columnspan=2, sticky="nsew", padx=0, pady=10)
@@ -149,6 +171,11 @@ send_button.grid(row=1, column=2, sticky="ew", padx=10, pady=(0, 10))
 
 
 #### MAIN ####
+
+check_for_new_user_thread()
+
+#swap_chat_thread = threading.Thread(target = change_chat, daemon=True)
+#swap_chat_thread.start()
 
 start_network_thread()
 

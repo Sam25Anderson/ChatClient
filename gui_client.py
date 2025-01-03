@@ -54,7 +54,7 @@ def network_task():
         for i in range(len(other_user)):
             print(other_user[i])
         
-        connect_client = "Brad"
+        connect_client = "John"
         client_socket.sendall(connect_client.encode())
 
         threading.Thread(target=receive_messages, args = (client_socket,), daemon=True).start()

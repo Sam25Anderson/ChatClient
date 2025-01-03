@@ -38,12 +38,23 @@ def handle_client(conn, addr):
             client_username = data.decode()
             print(f"Username: {client_username}")
 
-            if len(current_connections) == 0:
-                conn.sendall(pickle.dumps(["No other active users"]))
+            if client_username == "user_check":
+                while True:
+                    try:
+                        if len(current_connections) == 0:
+                            conn.sendall(pickle.dumps(["No other active users"]))
+                        else:
+                            conn.sendall(pickle.dumps(current_connections))
+                    except ConnectionResetError as e:
+                        print("Error receiving data: {e}")
+
             else:
-                conn.sendall(pickle.dumps(current_connections))
-            
-            current_connections.append(client_username)
+                if len(current_connections) == 0:
+                    conn.sendall(pickle.dumps(["No other active users"]))
+                else:
+                    conn.sendall(pickle.dumps(current_connections))
+                
+                current_connections.append(client_username)
 
             data = conn.recv(1024)
             client_connection_request = data.decode()
