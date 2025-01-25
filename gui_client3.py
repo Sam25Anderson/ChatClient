@@ -8,6 +8,17 @@ import time
 HOST = "127.0.0.1"
 PORT = 12346
 
+
+"""
+1. Make the side buttons changed the desired_user str value to that button name
+2. Make a thread for each open chat
+3. Store each chat data in seperate lists
+4. Make clicking a button reprint the message history
+    - Later maybe add some kind of caching to save time
+
+"""
+
+
 message_history = []
 last_list_length = 0
 sent_messages_history = 0
@@ -18,6 +29,7 @@ current_chat = ""
 button_count = 0
 button_list = []
 desired_user = ""
+button_dict = {}
 
 def receive_messages(client_socket):
     while True:
@@ -40,7 +52,7 @@ def receive_messages(client_socket):
             print(f"Error in receive_messages: {e}")
             break
 
-def network_task(desired_user):
+def network_task():
     global last_list_length
     global message
     global sent_messages_history
@@ -128,9 +140,11 @@ def change_chat():
 
 def add_button(button_name):
     global button_count
+    global button_dict
     button_count += 1
-    tk.Button(button_frame, text=f"{button_name}", command=switch_chat).pack(fill="x", pady=2)
+    button_dict[button_count] = tk.Button(button_frame, text=f"{button_name}", command=switch_chat).pack(fill="x", pady=2)
     canvas.configure(scrollregion=canvas.bbox("all"))
+    print(button_dict)
 
 window = tk.Tk()
 window.title("Chat Client")
