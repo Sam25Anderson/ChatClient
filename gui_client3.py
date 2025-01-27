@@ -10,7 +10,7 @@ PORT = 12346
 
 
 """
-1. Make the side buttons changed the desired_user str value to that button name
+1. Make the side buttons change the desired_user str value to that button name
 2. Make a thread for each open chat
 3. Store each chat data in seperate lists
 4. Make clicking a button reprint the message history
@@ -110,10 +110,6 @@ def set_message():
         return message
     return None
 
-def switch_chat():
-    global current_chat
-    current_chat = ""
-
 def check_for_new_users():
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as user_check_socket:
         user_check_socket.connect((HOST,PORT))
@@ -126,23 +122,23 @@ def check_for_new_users():
                 if i not in button_list:
                     add_button(i)
                     button_list.append(i)
+            time.sleep(5)
 
 def check_for_new_user_thread():
     print("Starting new user thread...")
     thread = threading.Thread(target = check_for_new_users, daemon=True)
     thread.start()
-''' Why this not worK?
-def change_chat():
-    while True:
-        if current_chat rel;kjnhgr;eisokrf hjg;opisrdfjhi g
-'''
+
+def change_chat(button_name):
+    print(f"You clicked {button_dict[button_name]}")
+
 #### GUI CODE ####
 
 def add_button(button_name):
     global button_count
     global button_dict
     button_count += 1
-    button_dict[button_count] = tk.Button(button_frame, text=f"{button_name}", command=switch_chat).pack(fill="x", pady=2)
+    button_dict[button_name] = tk.Button(button_frame, text=f"{button_name}", command=lambda: change_chat(button_name)).pack(fill="x", pady=2)
     canvas.configure(scrollregion=canvas.bbox("all"))
     print(button_dict)
 
