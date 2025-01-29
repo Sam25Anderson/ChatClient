@@ -26,6 +26,14 @@ def direct_message(sender, message):
             else:
                 print(f"Invalid socket for {sender}. Cannot send message.")
 
+def send_user_list_data(conn, data):
+    try:
+        pickled_data = pickle.dumps(data)
+        conn.sendall(len(pickled_data).to_bytes(4, 'big'))
+        conn.sendall(pickled_data)
+    except Exception as e:
+        print(f"Error sending data: {e}")
+
 def handle_client(conn, addr):
     print(f"Connected by {addr}")
     with conn:
@@ -39,21 +47,15 @@ def handle_client(conn, addr):
             print(f"Username: {client_username}")
 
             if client_username == "user_check":
-                while True:
-                    try:
-                        if len(current_connections) == 0:
-                            conn.sendall(pickle.dumps(["No other active users"]))
-                        else:
-                            conn.sendall(pickle.dumps(current_connections))
-                    except ConnectionResetError as e:
-                        print("Error receiving data: {e}")
-
+                send_user_list_data(conn, current_connections)
+                    
             else:
                 if len(current_connections) == 0:
                     conn.sendall(pickle.dumps(["No other active users"]))
                 else:
                     conn.sendall(pickle.dumps(current_connections))
-                
+                    time.sleep(5)
+            
                 current_connections.append(client_username)
 
             data = conn.recv(1024)

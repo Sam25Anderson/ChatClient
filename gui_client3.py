@@ -110,6 +110,20 @@ def set_message():
         return message
     return None
 
+def receive_new_user_data(sock):
+    try:
+        data_length = int.from_bytes(sock.recv(4), "big")
+        data = b""
+        while len(data) < data_length:
+            packet = sock.recv(data_length - len(data))
+            if not packet:
+                return None
+            data += packet
+        return pickle.loads(data)
+    except Exception as e:
+        print(f"Error receiving data: {e}")
+        return None
+
 def check_for_new_users():
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as user_check_socket:
         user_check_socket.connect((HOST,PORT))
@@ -117,7 +131,7 @@ def check_for_new_users():
         user_check_socket.sendall(socket_type.encode())
 
         while True:
-            user_list = pickle.loads(user_check_socket.recv(4096))
+            user_list = receive_new_user_data(user_check_socket)
             for i in user_list:
                 if i not in button_list:
                     add_button(i)
